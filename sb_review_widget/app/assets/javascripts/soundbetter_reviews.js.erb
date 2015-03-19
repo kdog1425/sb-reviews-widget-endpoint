@@ -1,15 +1,21 @@
 
-var reviews = [];
+var REVIEWS = [];
+var SB_CONTROLS = [];
+
 window.onload = function(){
-	reviews = eval('(' + document.getElementById('review_data').dataset.reviews + ')');
-	console.log(reviews);
+	REVIEWS = eval('(' + document.getElementById('review_data').dataset.reviews + ')');
 	var sb_reviews_widget = document.getElementById("sb_reviews_widget");
 	if (sb_reviews_widget){
 		var cssTextDict = createCssText();
 		createPreviewElements(sb_reviews_widget);
-		var sb_reviews_bg_color = sb_reviews_widget.getAttribute("data");
+		SB_CONTROLS["color"] = sb_reviews_widget.dataset.color;
+		SB_CONTROLS["autoscroll"] = sb_reviews_widget.dataset.autoscroll;
 		updateCss(cssTextDict);
 		updateReviewsList(cssTextDict);
+		if (SB_CONTROLS["autoscroll"] !== "") 
+			scrollReviews();
+		else
+			scrollOff();
 	}
 	else{
 		console.log("'sb_reviews_widget' div not in html!");
@@ -19,9 +25,9 @@ window.onload = function(){
 function updateReviewsList(cssTextDict){
 	// populate reviews list
 	var sb_reviews_list = document.getElementById("sb_reviews_list");
-	for (r in reviews){
+	for (r in REVIEWS){
 	  // get review data
-	  var curr_review = reviews[r];
+	  var curr_review = REVIEWS[r];
 	  
 	  // create list item
 	  var curr_li = document.createElement("li");
@@ -96,51 +102,16 @@ function createPreviewElements(mainDiv){
 	sb_embed_preview.appendChild(sb_reviews_outer);
 }
 
-function createCustomizationElements(mainDiv){
-	var sb_customization_section = createElement("div", "sb_customization_section"); 
-	mainDiv.appendChild(sb_customization_section);
-	var backgroundColor = createElement("p", "sb_bgColor_control");
-	backgroundColor.innerHTML = "Change background: <input class=\"color\"onchange=\"changeColor(this)\">";
-	var js_widget_code = createElement("p", "");
-	js_widget_code.innerHTML = "Paste this code to load the widget scripts:";
-	var js_textarea = createElement("textarea", "sb_embed_code_js");
-	var html_widget_code = createElement("p", "");
-	html_widget_code.innerHTML = "Paste this code where you want the widget:";
-	var html_textarea = createElement("textarea", "sb_embed_code_html");
-	sb_customization_section.appendChild(backgroundColor);
-	sb_customization_section.appendChild(js_widget_code);
-	sb_customization_section.appendChild(js_textarea);
-	sb_customization_section.appendChild(html_widget_code);
-	sb_customization_section.appendChild(html_textarea);
-}
-
 function changeColor(c){
 	var div_outer = document.getElementById('sb_reviews_outer');
 	div_outer.style.backgroundColor = c.value;
 	refreshEmbedCode(c.value);
-}
- 
-function refreshEmbedCode(c, cssTextDict){
-	var js = document.getElementById("sb_embed_code_js");
-	var html = document.getElementById("sb_embed_code_html");
-	js.innerHTML = "<script src=\"soundbetter_reviews.js\"></script><script type=\"text/javascript\"></script>";
-	html.innerHTML = "<div data=" + c + " id=\"sb_reviews_widget\"></div>";
 }
 
 function createElement(type, id){
 	var newElement = document.createElement(type);
 	newElement.setAttribute("id",id);
 	return newElement;
-}
-
-
-function scrollReviews(numReviews)
-{
-	var sb_review_list = document.getElementById("sb_review_list");
-	sb_review_list.firstChild.style.height = 135; // for infinite scroll
-	setTimeout(function(){
-			scrollToNextReview()
-	}, 1000);
 }
 
 function updateElementStyle(id, cssString){
@@ -153,26 +124,131 @@ function updateElementStyle(id, cssString){
 function createCssText(){
 	var cssTextDict = {}
 	cssTextDict["cssText_roundCorners"] = "-moz-border-radius: 5px;-webkit-border-radius: 5px;-khtml-border-radius: 5px;border-radius: 5px;";
+	
 	cssTextDict["cssText_sbReviewsWidget"] = "width: 260px; height: 300px; background: rgba(224, 220, 230, 0.48); -moz-border-radius: 5px;-webkit-border-radius: 5px;-khtml-border-radius: 5px;border-radius: 5px; border: 1px solid #fff;";
 
-	cssTextDict["cssText_sbEmbedPreview"] = "border-bottom: 1px solid #f8f8f8; padding-bottom: 5px; width:inherit;height:100%;";
+	cssTextDict["cssText_sbEmbedPreview"] = "border-bottom: 1px solid #f8f8f8; padding-bottom: 5px; width:inherit; height:100%;";
 
 	cssTextDict["cssText_sbBadge"] =  "padding-top: 5px; padding-bottom: 10px;display: block;margin-left: auto;margin-right: auto; height: 30%;";
 
-	cssTextDict["cssText_sbReviewsOuter"] = "width: 90%; height: 60%; position: relative; margin: 0px auto; border: 1px solid #ddd; border-radius: 3px; overflow-y: scroll;";
+	cssTextDict["cssText_sbReviewsOuter"] = "width: 90%; height: 60%; position: relative; margin: 0px auto; border: 1px solid #ddd; border-radius: 3px; overflow-y: hidden;";
 
 	cssTextDict["cssText_sbReviewsInner"] = "width: 90%; height: auto; margin: 0 auto; padding-bottom: 15px;";
 
 	cssTextDict["cssText_sbReviewsList"] = "text-align: left !important; list-style: none; list-style-position:inside; margin:0; padding:0; line-height: 1.0;";
 
-	cssTextDict["cssText_li"] = "margin: 5px;font-family: Verdana, Arial, sans-serif; font-weight: 3; font-size: 80%; line-height: inherit; border-bottom: 1px solid #fbfbfb;";
+	cssTextDict["cssText_li"] = "margin: 5px; font-family: Verdana, Arial, sans-serif; font-weight: 3; font-size: 80%; line-height: inherit; border-bottom: 1px solid #fbfbfb; height: auto;";
 
 	cssTextDict["cssText_p"] = "opacity: 1.0; padding-bottom: 2px; margin-bottom:2px; height: 10px;";
 
 	cssTextDict["cssText_reviewBody"] = "opacity: 1.0; margin-top: 2px; margin-bottom: 7px;";
 
 	cssTextDict["cssText_reviewStars"] = "margin-bottom: 4px; margin-top: 1px;";
-
-	// cssTextDict["cssText_sbCustomizationSection"] = "height: 50%; padding-top: 5px; text-align: center; font-family: Georgia; font-weight: 3; font-size: 80%;";
 	return cssTextDict;
 }
+
+function getDirectChildrenByTagName(elem, tagname) {
+    var allChildren = elem.children, wantedChildren=[], i, L;
+    tagname = tagname.toUpperCase();
+    for(i=0, L=allChildren.length; i<L; i++) {
+        if (allChildren[i].tagName.toUpperCase() == tagname) {
+            wantedChildren.push(allChildren[i]);
+        }
+    }
+    return wantedChildren;
+}
+
+function scrollReviews()
+{
+	var sb_review_list = document.getElementById("sb_reviews_list");
+	var numReviews = getDirectChildrenByTagName(sb_review_list, "LI");
+	var frame = document.getElementById("sb_reviews_outer");
+
+	sb_review_list.firstChild.style.height = frame.clientHeight + 'px'; // for infinite scroll
+	var container = document.getElementById("sb_reviews_outer");
+	setTimeout(function(){
+		var ul = document.getElementById("sb_reviews_list");
+		ul.appendChild(ul.firstChild.cloneNode(true));   
+		ul.lastChild.id = "item " + numReviews;
+		scrollToNextReview()
+	}, 1000);
+}
+
+function scrollToNextReview(){
+	var ul = document.getElementById("sb_reviews_list");
+	var container = document.getElementById("sb_reviews_outer");
+	var maxOffset = ul.clientHeight - ul.lastChild.scrollHeight;
+	function infScroll(idx, sofar, delay){
+		setTimeout(function() {
+			currItem = ul.childNodes[idx];
+
+			// item reached top of container
+			//console.log(container.scrollTop, maxOffset, sofar);
+			if (container.scrollTop  >= (sofar + currItem.scrollHeight + 15)){
+				delay = 1000;
+				sofar = container.scrollTop;
+				idx = ++idx % 3;
+				
+				// rewind to start if needed
+				if(container.scrollTop  >= maxOffset){
+					sofar = 0;
+					container.scrollTop = 0;
+					idx = 0;
+				}
+			}
+			else{
+				// keep scrolling
+				delay = 0;
+				container.scrollTop += 1;
+			} 
+			window.requestAnimationFrame(function(){infScroll(idx, sofar, delay)});
+		}, delay);
+	}
+	window.requestAnimationFrame(function(){infScroll(0, 0, 0)}, 1000); 
+}
+
+(function () {
+  var lastTime = 0;
+  var vendors = ['ms', 'moz', 'webkit', 'o'];
+  for(var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
+    window.requestAnimationFrame = window[vendors[x] + 'RequestAnimationFrame'];
+    window.cancelAnimationFrame = window[vendors[x] + 'CancelAnimationFrame'] || window[vendors[x] + 'CancelRequestAnimationFrame'];
+  }
+  if(!window.requestAnimationFrame)
+    window.requestAnimationFrame = function (callback, element) {
+      var currTime = new Date().getTime();
+      var timeToCall = Math.max(0, 16 - (currTime - lastTime));
+      var id = window.setTimeout(function () {
+        callback(currTime + timeToCall);
+      },
+      timeToCall);
+      lastTime = currTime + timeToCall;
+      return id;
+  };
+  if(!window.cancelAnimationFrame)
+    window.cancelAnimationFrame = function (id) {
+      clearTimeout(id);
+  };
+}());
+
+function scrollOn(){
+	SB_CONTROLS["autoscroll"] = true;
+	container.style.overflowY = "hidden";
+	scrollToNextReview();
+
+}
+
+function scrollOff(){
+	SB_CONTROLS["autoscroll"] = "";
+	var container = document.getElementById("sb_reviews_outer");
+	container.scrollTop = 0;
+	container.style.overflowY = "scroll";
+}
+// window.requestAnimFrame = (function(){
+//   return  window.requestAnimationFrame       ||
+//           window.webkitRequestAnimationFrame ||
+//           window.mozRequestAnimationFrame    ||
+//           function( callback ){
+//             window.setTimeout(callback, 1000 / 60);
+//           };
+// })();
