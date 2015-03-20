@@ -1,33 +1,55 @@
 
-var REVIEWS = [];
+var SB_REVIEWS = [];
 var SB_CONTROLS = [];
 
 window.onload = function(){
-	REVIEWS = eval('(' + document.getElementById('review_data').dataset.reviews + ')');
 	var sb_reviews_widget = document.getElementById("sb_reviews_widget");
 	if (sb_reviews_widget){
-		var cssTextDict = createCssText();
-		createPreviewElements(sb_reviews_widget);
-		SB_CONTROLS["color"] = sb_reviews_widget.dataset.color;
-		SB_CONTROLS["autoscroll"] = sb_reviews_widget.dataset.autoscroll;
-		updateCss(cssTextDict);
-		updateReviewsList(cssTextDict);
-		if (SB_CONTROLS["autoscroll"] !== "") 
-			scrollReviews();
-		else
-			scrollOff();
+		SB_REVIEWS = getReviews();
 	}
 	else{
 		console.log("'sb_reviews_widget' div not in html!");
 	}
 }
 
+function getReviews(){
+	var xmlhttp;
+	if (window.XMLHttpRequest)
+	{// code for IE7+, Firefox, Chrome, Opera, Safari
+	  xmlhttp=new XMLHttpRequest();
+	}
+	else
+	{// code for IE6, IE5
+	  xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+	}
+	xmlhttp.open("GET","http://localhost:3000/review_widget/fetch_reviews.json",true);
+	xmlhttp.send();
+	xmlhttp.onreadystatechange=function()
+	  {
+	  if (xmlhttp.readyState==4 && xmlhttp.status==200)
+	    {
+	    	SB_REVIEWS = eval(xmlhttp.responseText);
+	    	createWidget();
+	    }
+	  }
+}
+
+function createWidget(){
+	var cssTextDict = createCssText();
+	createPreviewElements(sb_reviews_widget);
+	SB_CONTROLS["color"] = sb_reviews_widget.dataset.color;
+	SB_CONTROLS["autoscroll"] = sb_reviews_widget.dataset.autoscroll;
+	updateCss(cssTextDict);
+	updateReviewsList(cssTextDict);
+	scrollReviews();
+}
+
 function updateReviewsList(cssTextDict){
 	// populate reviews list
 	var sb_reviews_list = document.getElementById("sb_reviews_list");
-	for (r in REVIEWS){
+	for (r in SB_REVIEWS){
 	  // get review data
-	  var curr_review = REVIEWS[r];
+	  var curr_review = SB_REVIEWS[r];
 	  
 	  // create list item
 	  var curr_li = document.createElement("li");
